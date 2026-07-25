@@ -1,6 +1,6 @@
 # Browser Tools
 
-一个 pnpm workspace。所有工具由同一个 `Kelyn8/Kelyn8.github.io` 仓库管理，并共享同一套构建程序。
+一个 pnpm workspace。所有工具由同一个 `luobo-dev/luobo-dev.github.io` 仓库管理，并共享同一套构建程序。
 
 ```text
 tools/
@@ -45,7 +45,7 @@ pnpm build:pages        # 构建所有工具并汇总到 pages-dist
 仓库使用 `.github/workflows/deploy-pages.yml` 自动发布。推送到 `main` 后，Actions 会安装依赖、执行 `pnpm build:pages`，并把 `pages-dist` 发布到：
 
 ```text
-https://kelyn8.github.io/
+https://luobo-dev.github.io/
 ├── open-csv/
 └── wechat-editor/
 ```

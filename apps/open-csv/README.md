@@ -33,7 +33,7 @@ pnpm build
 发布前在 `.env` 中配置正式站点地址：
 
 ```bash
-SITE_URL=https://kelyn8.github.io/open-csv/
+SITE_URL=https://luobo-dev.github.io/open-csv/
 ```
 
 构建程序会据此为每个语言页面生成绝对 canonical、绝对 `hreflang` 和 `dist/sitemap.xml`。未配置正式域名时只生成可解析的相对自引用 canonical，不会生成包含错误域名的 sitemap。

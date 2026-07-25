@@ -27,10 +27,10 @@ function homePage(items) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Private browser-based utilities from Kelyn8." />
+    <meta name="description" content="Private browser-based utilities from Luobo Dev." />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://kelyn8.github.io/" />
-    <title>Kelyn8 Tools</title>
+    <link rel="canonical" href="https://luobo-dev.github.io/" />
+    <title>Luobo Dev Tools</title>
     <style>
       * { box-sizing: border-box; }
       body { margin: 0; color: #172033; background: #f4f7fb; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -48,7 +48,7 @@ function homePage(items) {
   </head>
   <body>
     <main>
-      <p class="eyebrow">Kelyn8 Tools</p>
+      <p class="eyebrow">Luobo Dev Tools</p>
       <h1>Useful tools,<br />right in your browser.</h1>
       <p class="intro">A growing collection of focused web utilities. Simple to use, fast to load, and designed to keep your files on your device.</p>
       <section class="tools" aria-label="Available tools">${cards}
@@ -75,12 +75,12 @@ await writeFile(resolve(outputRoot, 'index.html'), homePage(tools))
 await writeFile(resolve(outputRoot, '.nojekyll'), '')
 await writeFile(
   resolve(outputRoot, 'robots.txt'),
-  `User-agent: *\nAllow: /\n\nSitemap: https://kelyn8.github.io/sitemap.xml\n`,
+  `User-agent: *\nAllow: /\n\nSitemap: https://luobo-dev.github.io/sitemap.xml\n`,
 )
 
 const sitemaps = tools
   .filter((tool) => tool.sitemap)
-  .map((tool) => `  <sitemap><loc>https://kelyn8.github.io/${tool.path}/${tool.sitemap}</loc></sitemap>`)
+  .map((tool) => `  <sitemap><loc>https://luobo-dev.github.io/${tool.path}/${tool.sitemap}</loc></sitemap>`)
   .join('\n')
 
 await writeFile(
