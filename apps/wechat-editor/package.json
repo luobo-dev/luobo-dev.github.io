@@ -1,0 +1,17 @@
+{
+  "name": "@tools/wechat-editor",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tool-build dev",
+    "build": "tool-build build",
+    "preview": "tool-build preview"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^0.468.0"
+  },
+  "devDependencies": {
+    "@tools/tool-build": "workspace:*"
+  }
+}

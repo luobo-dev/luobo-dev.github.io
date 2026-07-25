@@ -1,0 +1,15 @@
+{
+  "name": "browser-tools",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:open-csv": "pnpm --filter @tools/open-csv dev",
+    "dev:wechat": "pnpm --filter @tools/wechat-editor dev",
+    "build": "pnpm -r --if-present run build",
+    "build:pages": "pnpm build && node scripts/prepare-pages.mjs",
+    "build:open-csv": "pnpm --filter @tools/open-csv build",
+    "build:wechat": "pnpm --filter @tools/wechat-editor build"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
