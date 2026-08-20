@@ -12,4 +12,10 @@ export default [
     source: 'apps/wechat-editor/dist',
     path: 'wechat-editor',
   },
+  {
+    name: '一笔',
+    description: 'A private, offline-first personal ledger that keeps every record on your device.',
+    source: 'apps/pocket-ledger/dist',
+    path: 'pocket-ledger',
+  },
 ]

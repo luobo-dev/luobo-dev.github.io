@@ -15,6 +15,7 @@ tools/
 │       ├── package.json
 │       ├── index.html
 │       └── src/
+│   └── pocket-ledger/      # 离线优先的个人记账 PWA
 ├── packages/
 │   └── tool-build/       # 共享 Vite、Tailwind、Vue CDN 构建程序
 └── scripts/
@@ -33,7 +34,9 @@ apps/wechat-editor/index.html → apps/wechat-editor/dist/index.html
 ```bash
 pnpm install
 pnpm dev:open-csv       # 开发 Open CSV
+pnpm dev:ledger         # 开发一笔记账
 pnpm build:open-csv     # 只构建 Open CSV
+pnpm build:ledger       # 只构建一笔记账
 pnpm build              # 构建所有工具
 pnpm build:pages        # 构建所有工具并汇总到 pages-dist
 ```
@@ -47,7 +50,8 @@ pnpm build:pages        # 构建所有工具并汇总到 pages-dist
 ```text
 https://luobo-dev.github.io/
 ├── open-csv/
-└── wechat-editor/
+├── wechat-editor/
+└── pocket-ledger/
 ```
 
 工具的源码目录与发布路径在 `site.config.js` 中统一配置。新增工具后，在该文件增加一项即可汇总到 Pages 产物。

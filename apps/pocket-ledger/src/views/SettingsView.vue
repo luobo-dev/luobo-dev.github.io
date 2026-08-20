@@ -1,0 +1,179 @@
+<script setup>
+import { ref } from 'vue'
+import {
+  PhArrowClockwise,
+  PhCheckCircle,
+  PhDownloadSimple,
+  PhFileXls,
+  PhInfo,
+  PhShareNetwork,
+  PhShieldCheck,
+  PhUploadSimple,
+  PhWarningCircle,
+  PhX,
+} from '@phosphor-icons/vue'
+import { commitLedgerImport, exportLedgerExcel, parseLedgerWorkbook } from '../lib/excel.js'
+
+const props = defineProps({
+  transactions: { type: Array, default: () => [] },
+  categories: { type: Array, default: () => [] },
+})
+const emit = defineEmits(['export', 'import', 'changed', 'notify'])
+const fileInput = ref(null)
+const excelInput = ref(null)
+const excelBusy = ref(false)
+const importing = ref(false)
+const excelError = ref('')
+const preview = ref(null)
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+
+function chooseFile() {
+  fileInput.value?.click()
+}
+
+function onFile(event) {
+  const file = event.target.files?.[0]
+  if (file) emit('import', file)
+  event.target.value = ''
+}
+
+function chooseExcel() {
+  excelInput.value?.click()
+}
+
+async function onExcelFile(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+
+  excelBusy.value = true
+  excelError.value = ''
+  preview.value = null
+  try {
+    preview.value = await parseLedgerWorkbook(file, props.categories, props.transactions)
+  } catch (error) {
+    excelError.value = error.message || 'Excel 文件读取失败'
+  } finally {
+    excelBusy.value = false
+  }
+}
+
+async function confirmExcelImport() {
+  if (!preview.value?.validRows || importing.value) return
+  importing.value = true
+  try {
+    const result = await commitLedgerImport(preview.value)
+    emit('changed')
+    emit('notify', `已导入 ${result.transactionsCreated} 笔流水，新增 ${result.categoriesCreated} 个分类`)
+    preview.value = null
+  } catch (error) {
+    excelError.value = error.message || '导入失败，请稍后重试'
+  } finally {
+    importing.value = false
+  }
+}
+
+async function downloadExcel() {
+  excelBusy.value = true
+  excelError.value = ''
+  try {
+    await exportLedgerExcel(props.transactions, props.categories)
+    emit('notify', `已导出 ${props.transactions.length} 笔流水`)
+  } catch (error) {
+    excelError.value = error.message || 'Excel 导出失败'
+  } finally {
+    excelBusy.value = false
+  }
+}
+</script>
+
+<template>
+  <div class="view settings-view">
+    <header class="page-header">
+      <div>
+        <p class="section-kicker">设置</p>
+        <h1>数据由你保管</h1>
+      </div>
+    </header>
+
+    <section class="privacy-panel">
+      <PhShieldCheck :size="30" weight="duotone" />
+      <div><h2>只存在这台设备</h2><p>流水保存在浏览器的 IndexedDB 中，不会上传到服务器。</p></div>
+    </section>
+
+    <section class="settings-section">
+      <div class="section-heading"><div><h2>Excel 导入导出</h2><p>兼容随手记导入，导出一笔简洁格式</p></div></div>
+      <div class="settings-actions">
+        <button type="button" :disabled="excelBusy" @click="chooseExcel"><PhFileXls :size="22" /><span><strong>{{ excelBusy ? '正在读取...' : '导入 Excel' }}</strong><small>追加流水，重复记录自动跳过</small></span></button>
+        <button type="button" :disabled="excelBusy" @click="downloadExcel"><PhDownloadSimple :size="21" /><span><strong>导出 Excel</strong><small>导出 {{ transactions.length }} 笔简洁格式流水</small></span></button>
+        <input ref="excelInput" hidden type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" @change="onExcelFile" />
+      </div>
+      <p v-if="excelError && !preview" class="settings-error" role="alert"><PhWarningCircle :size="17" />{{ excelError }}</p>
+    </section>
+
+    <section class="settings-section">
+      <div class="section-heading"><div><h2>完整备份</h2><p>包含一笔的全部本地数据</p></div></div>
+      <div class="settings-actions">
+        <button type="button" @click="emit('export')"><PhDownloadSimple :size="21" /><span><strong>导出 JSON 备份</strong><small>适合换设备或防止数据丢失</small></span></button>
+        <button type="button" @click="chooseFile"><PhUploadSimple :size="21" /><span><strong>恢复 JSON 备份</strong><small>会替换当前全部数据</small></span></button>
+        <input ref="fileInput" hidden type="file" accept="application/json,.json" @change="onFile" />
+      </div>
+    </section>
+
+    <section v-if="!isStandalone" class="install-panel">
+      <PhShareNetwork v-if="isIos" :size="25" />
+      <PhArrowClockwise v-else :size="25" />
+      <div>
+        <h2>添加到手机桌面</h2>
+        <p v-if="isIos">在 Safari 中点击分享按钮，再选择“添加到主屏幕”。</p>
+        <p v-else>打开浏览器菜单，选择“安装应用”或“添加到主屏幕”。</p>
+      </div>
+    </section>
+
+    <section class="about-panel">
+      <PhInfo :size="21" />
+      <div><strong>一笔</strong><p>无广告、无账号、无订阅。清除浏览器网站数据会同时删除账本，请记得备份。</p></div>
+    </section>
+
+    <Teleport to="body">
+      <Transition name="sheet">
+        <div v-if="preview" class="sheet-layer" @click.self="preview = null">
+          <section class="sheet-panel compact-sheet import-preview" role="dialog" aria-modal="true" aria-labelledby="import-preview-title">
+            <div class="sheet-handle"></div>
+            <header class="sheet-header">
+              <div>
+                <p class="section-kicker">导入预览</p>
+                <h2 id="import-preview-title">检查后再写入</h2>
+              </div>
+              <button class="icon-button" type="button" aria-label="关闭导入预览" @click="preview = null"><PhX :size="22" /></button>
+            </header>
+
+            <p class="import-file-name">{{ preview.fileName }}</p>
+            <div class="import-counts" aria-label="导入统计">
+              <div><strong>{{ preview.validRows }}</strong><span>可导入</span></div>
+              <div><strong>{{ preview.duplicateRows }}</strong><span>重复跳过</span></div>
+              <div :class="{ warning: preview.invalidRows }"><strong>{{ preview.invalidRows }}</strong><span>异常</span></div>
+            </div>
+
+            <div class="import-detail-list">
+              <p><PhCheckCircle :size="19" weight="fill" /><span>将新增 <strong>{{ preview.newPrimaryCategories.length + preview.newSecondaryCategories.length }}</strong> 个分类</span></p>
+              <p><PhShieldCheck :size="19" weight="fill" /><span>只追加到当前账本，不会覆盖现有数据</span></p>
+            </div>
+
+            <div v-if="preview.errors.length" class="import-errors">
+              <h3>需要检查的行</h3>
+              <p v-for="item in preview.errors.slice(0, 4)" :key="`${item.sheet}-${item.row}`">{{ item.sheet }} 第 {{ item.row }} 行：{{ item.message }}</p>
+              <small v-if="preview.errors.length > 4">另有 {{ preview.errors.length - 4 }} 条异常未显示</small>
+            </div>
+
+            <p v-if="excelError" class="settings-error" role="alert"><PhWarningCircle :size="17" />{{ excelError }}</p>
+            <button class="primary-button full-width import-confirm" type="button" :disabled="!preview.validRows || importing" @click="confirmExcelImport">
+              {{ importing ? '正在导入...' : `导入 ${preview.validRows} 笔流水` }}
+            </button>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
+  </div>
+</template>

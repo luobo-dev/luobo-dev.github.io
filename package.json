@@ -6,10 +6,12 @@
   "scripts": {
     "dev:open-csv": "pnpm --filter @tools/open-csv dev",
     "dev:wechat": "pnpm --filter @tools/wechat-editor dev",
+    "dev:ledger": "pnpm --filter @tools/pocket-ledger dev",
     "build": "pnpm -r --if-present run build",
     "build:pages": "pnpm build && node scripts/prepare-pages.mjs",
     "build:open-csv": "pnpm --filter @tools/open-csv build",
-    "build:wechat": "pnpm --filter @tools/wechat-editor build"
+    "build:wechat": "pnpm --filter @tools/wechat-editor build",
+    "build:ledger": "pnpm --filter @tools/pocket-ledger build"
   },
   "packageManager": "pnpm@10.33.2"
 }
