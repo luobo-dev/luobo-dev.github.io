@@ -32,7 +32,7 @@ export function formatFriendlyDate(value) {
 export function formatDateHeading(value) {
   const date = new Date(`${value}T00:00:00`)
   const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()]
-  return `${formatFriendlyDate(value)} · ${date.getMonth() + 1}月${date.getDate()}日 ${weekday}`
+  return `${formatFriendlyDate(value)} · ${weekday}`
 }
 
 export function formatDateRange(start, end) {

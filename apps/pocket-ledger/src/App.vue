@@ -3,9 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   PhChartPieSlice,
-  PhFolders,
   PhGearSix,
   PhHouse,
+  PhListBullets,
   PhPlus,
 } from '@phosphor-icons/vue'
 import TransactionSheet from './components/TransactionSheet.vue'
@@ -23,7 +23,12 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const currentView = computed(() => route.name === 'records' ? 'home' : route.name || 'home')
+const currentView = computed(() => {
+  if (route.name === 'categories') return 'settings'
+  if (route.name === 'period-tracker') return 'settings'
+  if (route.name === 'annual-report') return 'stats'
+  return route.name || 'home'
+})
 const categories = ref([])
 const transactions = ref([])
 const loading = ref(true)
@@ -35,8 +40,8 @@ let toastTimer
 
 const navItems = [
   { key: 'home', label: '首页', icon: PhHouse },
+  { key: 'records', label: '流水', icon: PhListBullets },
   { key: 'stats', label: '统计', icon: PhChartPieSlice },
-  { key: 'categories', label: '分类', icon: PhFolders },
   { key: 'settings', label: '设置', icon: PhGearSix },
 ]
 
@@ -70,7 +75,7 @@ function addTransaction() {
 
 function routeProps(name) {
   if (name === 'home') return { transactions: transactions.value }
-  if (name === 'stats' || name === 'records') return { transactions: transactions.value, categories: categories.value }
+  if (name === 'stats' || name === 'annual-report' || name === 'records') return { transactions: transactions.value, categories: categories.value }
   if (name === 'categories') return { categories: categories.value }
   if (name === 'settings') return { transactions: transactions.value, categories: categories.value }
   return {}

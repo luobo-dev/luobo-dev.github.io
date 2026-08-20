@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('./views/StatsView.vue'),
     },
     {
+      path: '/annual-report/:year?',
+      name: 'annual-report',
+      component: () => import('./views/AnnualReportView.vue'),
+    },
+    {
       path: '/categories',
       name: 'categories',
       component: () => import('./views/CategoriesView.vue'),
@@ -28,6 +33,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),
+    },
+    {
+      path: '/period-tracker',
+      name: 'period-tracker',
+      component: () => import('./views/PeriodTrackerView.vue'),
     },
     {
       path: '/:pathMatch(.*)*',

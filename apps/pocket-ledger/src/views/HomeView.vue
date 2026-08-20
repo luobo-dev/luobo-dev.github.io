@@ -104,6 +104,11 @@ const trendOption = computed(() => ({
       <span><strong>记一笔</strong><small>记录金额、事项和分类</small></span>
     </button>
 
+    <button class="records-entry" type="button" @click="router.push({ name: 'records' })">
+      <span><strong>查看流水</strong><small>按日期范围查询和管理所有记录</small></span>
+      <PhArrowRight :size="20" />
+    </button>
+
     <section class="home-trend-panel">
       <div class="home-trend-header">
         <div>
@@ -118,9 +123,5 @@ const trendOption = computed(() => ({
       <EChart :option="trendOption" :height="210" />
     </section>
 
-    <button class="records-entry" type="button" @click="router.push({ name: 'records' })">
-      <span><strong>查看流水</strong><small>按日期范围查询和管理所有记录</small></span>
-      <PhArrowRight :size="20" />
-    </button>
   </div>
 </template>

@@ -2,6 +2,8 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { PhX } from '@phosphor-icons/vue'
 import { localDateString } from '../lib/date.js'
+import { evaluateAmountExpression } from '../lib/amount.js'
+import CategorySelect from './CategorySelect.vue'
 
 const props = defineProps({
   open: Boolean,
@@ -20,26 +22,22 @@ function emptyForm() {
     type: 'expense',
     amount: '',
     date: localDateString(),
-    primaryCategoryId: '',
     categoryId: '',
     event: '',
     note: '',
   }
 }
 
-const primaryCategories = computed(() => props.categories.filter((item) => item.type === form.value.type && !item.parentId))
-const secondaryCategories = computed(() => props.categories.filter((item) => item.parentId === form.value.primaryCategoryId))
+const availableCategories = computed(() => props.categories.filter((item) => item.type === form.value.type))
 
 watch(() => props.open, async (open) => {
   if (!open) return
   error.value = ''
   if (props.transaction) {
-    const category = props.categories.find((item) => item.id === props.transaction.categoryId)
     form.value = {
       ...props.transaction,
       event: props.transaction.event || '',
       note: props.transaction.note || '',
-      primaryCategoryId: category?.parentId || category?.id || '',
     }
   } else {
     form.value = emptyForm()
@@ -50,9 +48,11 @@ watch(() => props.open, async (open) => {
 })
 
 function pickFirstCategory() {
-  const primary = props.categories.find((item) => item.type === form.value.type && !item.parentId)
-  form.value.primaryCategoryId = primary?.id || ''
-  form.value.categoryId = props.categories.find((item) => item.parentId === primary?.id)?.id || ''
+  const parents = availableCategories.value.filter((item) => !item.parentId)
+  const children = availableCategories.value.filter((item) => item.parentId)
+  const foodCategory = parents.find((item) => item.name === '食品酒水')
+  const preferred = children.find((item) => item.parentId === foodCategory?.id && item.name === '早午晚餐')
+  form.value.categoryId = preferred?.id || children[0]?.id || ''
 }
 
 function setType(type) {
@@ -61,18 +61,43 @@ function setType(type) {
   pickFirstCategory()
 }
 
-function pickFirstSecondary() {
-  form.value.categoryId = secondaryCategories.value[0]?.id || ''
+function sanitizeAmount() {
+  form.value.amount = String(form.value.amount ?? '').replace(/[^\d.+\-−*/×÷]/g, '')
+  error.value = ''
+}
+
+function appendOperator(operator) {
+  const amount = String(form.value.amount ?? '')
+  if (!amount && operator !== '-') return
+  form.value.amount = /[+\-−*/×÷]$/.test(amount) ? `${amount.slice(0, -1)}${operator}` : `${amount}${operator}`
+  error.value = ''
+  amountInput.value?.focus()
+}
+
+function calculateAmount() {
+  try {
+    const amount = evaluateAmountExpression(form.value.amount)
+    if (amount <= 0) throw new Error('计算结果需要大于 0')
+    form.value.amount = String(amount)
+    error.value = ''
+    return amount
+  } catch (calculationError) {
+    error.value = calculationError.message
+    return null
+  }
+}
+
+function clearAmount() {
+  form.value.amount = ''
+  error.value = ''
+  amountInput.value?.focus()
 }
 
 function submit() {
-  const amount = Number(form.value.amount)
-  if (!Number.isFinite(amount) || amount <= 0) {
-    error.value = '请输入大于 0 的金额'
-    return
-  }
-  if (!form.value.date || !form.value.primaryCategoryId || !form.value.categoryId) {
-    error.value = '请完整选择日期和分类'
+  const amount = calculateAmount()
+  if (amount === null) return
+  if (!form.value.date || !form.value.categoryId) {
+    error.value = '请选择日期和分类'
     return
   }
   emit('save', {
@@ -92,66 +117,59 @@ function submit() {
   <Teleport to="body">
     <Transition name="sheet">
       <div v-if="open" class="sheet-layer" @click.self="emit('close')">
-        <section class="sheet-panel" role="dialog" aria-modal="true" :aria-label="transaction ? '编辑流水' : '记一笔'">
+        <section class="sheet-panel transaction-sheet" role="dialog" aria-modal="true" :aria-label="transaction ? '编辑流水' : '记一笔'">
           <div class="sheet-handle" aria-hidden="true"></div>
           <header class="sheet-header">
-            <div>
-              <p class="section-kicker">{{ transaction ? '修改记录' : '新的记录' }}</p>
-              <h2>{{ transaction ? '编辑流水' : '记一笔' }}</h2>
-            </div>
+            <h2>{{ transaction ? '编辑流水' : '记一笔' }}</h2>
             <button class="icon-button" type="button" aria-label="关闭" @click="emit('close')">
               <PhX :size="22" />
             </button>
           </header>
 
-          <form class="transaction-form" @submit.prevent="submit">
+          <form id="transaction-form" class="transaction-form" @submit.prevent="submit">
             <div class="type-toggle" aria-label="交易类型">
               <button type="button" :class="{ active: form.type === 'expense' }" @click="setType('expense')">支出</button>
               <button type="button" :class="{ active: form.type === 'income' }" @click="setType('income')">收入</button>
             </div>
 
-            <label class="field amount-field">
-              <span>金额</span>
+            <div class="field amount-field">
+              <span id="amount-label">金额</span>
               <span class="money-input">
                 <span>¥</span>
-                <input ref="amountInput" v-model="form.amount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" />
+                <input id="amount" ref="amountInput" v-model="form.amount" type="text" inputmode="decimal" enterkeyhint="done" aria-labelledby="amount-label" placeholder="0.00 或 12+8" @input="sanitizeAmount" @keydown.enter.prevent="calculateAmount" />
               </span>
-            </label>
+              <div class="amount-operators" aria-label="金额运算">
+                <button v-for="operator in ['+', '−', '×', '÷']" :key="operator" type="button" :aria-label="`${operator}运算`" @pointerdown.prevent @click="appendOperator(operator)">{{ operator }}</button>
+                <button class="equals" type="button" aria-label="计算结果" @pointerdown.prevent @click="calculateAmount">=</button>
+                <button class="clear" type="button" @pointerdown.prevent @click="clearAmount">清空</button>
+              </div>
+            </div>
 
             <label class="field">
               <span>日期</span>
               <input v-model="form.date" type="date" required />
             </label>
 
-            <div class="field-grid">
-              <label class="field">
-                <span>一级分类</span>
-                <select v-model="form.primaryCategoryId" required @change="pickFirstSecondary">
-                  <option v-for="item in primaryCategories" :key="item.id" :value="item.id">{{ item.name }}</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>二级分类</span>
-                <select v-model="form.categoryId" required>
-                  <option v-for="item in secondaryCategories" :key="item.id" :value="item.id">{{ item.name }}</option>
-                </select>
-              </label>
+            <div class="field">
+              <span>分类</span>
+              <CategorySelect v-model="form.categoryId" :categories="availableCategories" />
             </div>
 
             <label class="field">
               <span>事项</span>
               <input v-model="form.event" maxlength="40" placeholder="例如：和朋友吃火锅" />
-              <small>写下这笔钱对应的事件，之后更容易回想。</small>
             </label>
 
             <label class="field">
               <span>备注</span>
-              <textarea v-model="form.note" maxlength="120" rows="3" placeholder="地点、付款方式或其他补充"></textarea>
+              <textarea v-model="form.note" maxlength="120" rows="2" placeholder="地点、付款方式或其他补充"></textarea>
             </label>
-
-            <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-            <button class="primary-button full-width" type="submit">保存流水</button>
           </form>
+
+          <footer class="transaction-actions">
+            <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+            <button class="primary-button full-width" type="submit" form="transaction-form">保存流水</button>
+          </footer>
         </section>
       </div>
     </Transition>

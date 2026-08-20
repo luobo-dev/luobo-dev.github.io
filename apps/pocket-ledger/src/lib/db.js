@@ -4,8 +4,8 @@ const DB_NAME = 'pocket-ledger'
 const DB_VERSION = 1
 
 const defaultCategories = [
-  ['expense-food', '餐饮', 'expense', null, 10],
-  ['expense-food-meal', '正餐', 'expense', 'expense-food', 11],
+  ['expense-food', '食品酒水', 'expense', null, 10],
+  ['expense-food-meal', '早午晚餐', 'expense', 'expense-food', 11],
   ['expense-food-snack', '零食饮料', 'expense', 'expense-food', 12],
   ['expense-transport', '交通', 'expense', null, 20],
   ['expense-transport-public', '公交地铁', 'expense', 'expense-transport', 21],
@@ -48,9 +48,52 @@ const dbPromise = openDB(DB_NAME, DB_VERSION, {
   },
 })
 
+async function mergeDuplicateDefaultMeal(db) {
+  const categories = await db.getAll('categories')
+  const foodParentIds = new Set(categories
+    .filter((item) => !item.parentId && item.type === 'expense' && item.name === '食品酒水')
+    .map((item) => item.id))
+  const duplicates = categories.filter((item) => foodParentIds.has(item.parentId) && item.name === '早午晚餐')
+  if (duplicates.length < 2) return
+
+  const canonical = duplicates.find((item) => item.id !== 'expense-food-meal') || duplicates[0]
+  const redundant = duplicates.filter((item) => item.id !== canonical.id)
+  const transactionUpdates = []
+
+  for (const category of redundant) {
+    const usedTransactions = await db.getAllFromIndex('transactions', 'by-category', category.id)
+    transactionUpdates.push(...usedTransactions.map((item) => ({ ...item, categoryId: canonical.id })))
+  }
+
+  const tx = db.transaction(['categories', 'transactions'], 'readwrite')
+  await Promise.all([
+    ...transactionUpdates.map((item) => tx.objectStore('transactions').put(item)),
+    ...redundant.map((item) => tx.objectStore('categories').delete(item.id)),
+  ])
+  await tx.done
+}
+
 export async function initializeDatabase() {
   const db = await dbPromise
-  if (await db.count('categories')) return
+  if (await db.count('categories')) {
+    const categories = await db.getAll('categories')
+    const defaultFood = categories.find((item) => item.id === 'expense-food')
+    const existingFood = categories.find((item) => item.id !== 'expense-food' && !item.parentId && item.type === 'expense' && item.name === '食品酒水')
+    const defaultMeal = categories.find((item) => item.id === 'expense-food-meal')
+
+    if (defaultFood?.name === '餐饮' && !existingFood) {
+      await db.put('categories', { ...defaultFood, name: '食品酒水' })
+    }
+    if (defaultMeal) {
+      await db.put('categories', {
+        ...defaultMeal,
+        name: defaultMeal.name === '正餐' ? '早午晚餐' : defaultMeal.name,
+        parentId: existingFood && defaultMeal.parentId === defaultFood?.id ? existingFood.id : defaultMeal.parentId,
+      })
+    }
+    await mergeDuplicateDefaultMeal(db)
+    return
+  }
   const tx = db.transaction('categories', 'readwrite')
   await Promise.all(defaultCategories.map((category) => tx.store.add(category)))
   await tx.done

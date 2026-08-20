@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { PhFolderSimple, PhPencilSimple, PhPlus, PhTrash, PhX } from '@phosphor-icons/vue'
+import AppSelect from '../components/AppSelect.vue'
 
 const props = defineProps({ categories: { type: Array, default: () => [] } })
 const emit = defineEmits(['save', 'delete'])
@@ -91,8 +92,8 @@ function submit() {
               <button class="icon-button" type="button" aria-label="关闭" @click="editorOpen = false"><PhX :size="22" /></button>
             </header>
             <form class="category-form" @submit.prevent="submit">
-              <label class="field"><span>交易类型</span><select v-model="form.type" :disabled="Boolean(form.id)"><option value="expense">支出</option><option value="income">收入</option></select></label>
-              <label class="field"><span>上级分类</span><select v-model="form.parentId" :disabled="Boolean(form.id && !form.parentId)"><option value="">无，作为一级分类</option><option v-for="item in parentOptions" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
+              <div class="field"><span>交易类型</span><AppSelect v-model="form.type" :options="[{ value: 'expense', label: '支出' }, { value: 'income', label: '收入' }]" label="选择交易类型" :disabled="Boolean(form.id)" /></div>
+              <div class="field"><span>上级分类</span><AppSelect v-model="form.parentId" :options="[{ value: '', label: '无，作为一级分类' }, ...parentOptions.map((item) => ({ value: item.id, label: item.name }))]" label="选择上级分类" :disabled="Boolean(form.id && !form.parentId)" /></div>
               <label class="field"><span>分类名称</span><input v-model="form.name" maxlength="12" placeholder="例如：早餐" /></label>
               <p v-if="error" class="form-error">{{ error }}</p>
               <button class="primary-button full-width" type="submit">保存分类</button>

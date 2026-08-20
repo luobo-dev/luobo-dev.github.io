@@ -1,10 +1,13 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   PhArrowClockwise,
+  PhCalendarBlank,
   PhCheckCircle,
   PhDownloadSimple,
   PhFileXls,
+  PhFolders,
   PhInfo,
   PhShareNetwork,
   PhShieldCheck,
@@ -18,6 +21,7 @@ const props = defineProps({
   transactions: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
 })
+const router = useRouter()
 const emit = defineEmits(['export', 'import', 'changed', 'notify'])
 const fileInput = ref(null)
 const excelInput = ref(null)
@@ -103,6 +107,13 @@ async function downloadExcel() {
     </section>
 
     <section class="settings-section">
+      <div class="section-heading"><div><h2>账本设置</h2><p>整理记账时使用的分类</p></div></div>
+      <div class="settings-actions">
+        <button type="button" @click="router.push({ name: 'categories' })"><PhFolders :size="22" /><span><strong>分类管理</strong><small>新增、编辑和删除一级、二级分类</small></span></button>
+      </div>
+    </section>
+
+    <section class="settings-section">
       <div class="section-heading"><div><h2>Excel 导入导出</h2><p>兼容随手记导入，导出一笔简洁格式</p></div></div>
       <div class="settings-actions">
         <button type="button" :disabled="excelBusy" @click="chooseExcel"><PhFileXls :size="22" /><span><strong>{{ excelBusy ? '正在读取...' : '导入 Excel' }}</strong><small>追加流水，重复记录自动跳过</small></span></button>
@@ -134,6 +145,13 @@ async function downloadExcel() {
     <section class="about-panel">
       <PhInfo :size="21" />
       <div><strong>一笔</strong><p>无广告、无账号、无订阅。清除浏览器网站数据会同时删除账本，请记得备份。</p></div>
+    </section>
+
+    <section class="settings-section period-settings-entry">
+      <div class="section-heading"><div><h2>私人小工具</h2><p>独立保存，不混入账本数据</p></div></div>
+      <div class="settings-actions">
+        <button type="button" @click="router.push({ name: 'period-tracker' })"><PhCalendarBlank :size="22" /><span><strong>经期记录</strong><small>记下开始、结束日期和周期规律</small></span></button>
+      </div>
     </section>
 
     <Teleport to="body">
