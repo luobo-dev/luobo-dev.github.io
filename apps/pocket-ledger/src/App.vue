@@ -10,6 +10,10 @@ import {
 } from '@phosphor-icons/vue'
 import TransactionSheet from './components/TransactionSheet.vue'
 import PwaUpdatePrompt from './components/PwaUpdatePrompt.vue'
+import { validatePeriods } from './lib/period.js'
+import { getPeriods, replacePeriods } from './lib/periodDb.js'
+import { validateVaultEnvelope } from './lib/vaultCrypto.js'
+import { getVaultEnvelope, replaceVaultEnvelope } from './lib/vaultDb.js'
 import {
   exportDatabase,
   getAllData,
@@ -26,6 +30,7 @@ const router = useRouter()
 const currentView = computed(() => {
   if (route.name === 'categories') return 'settings'
   if (route.name === 'period-tracker') return 'settings'
+  if (route.name === 'private-vault') return 'settings'
   if (route.name === 'annual-report') return 'stats'
   return route.name || 'home'
 })
@@ -126,24 +131,39 @@ async function onDeleteCategory(item) {
 }
 
 async function onExport() {
-  const content = await exportDatabase()
+  const ledger = JSON.parse(await exportDatabase())
+  const [periods, vault] = await Promise.all([getPeriods(), getVaultEnvelope()])
+  const content = JSON.stringify({
+    ...ledger,
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    privateTools: { periods, vault: vault || null },
+  }, null, 2)
   const blob = new Blob([content], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `一笔备份-${new Date().toISOString().slice(0, 10)}.json`
+  link.download = `一笔完整备份-${new Date().toISOString().slice(0, 10)}.json`
   link.click()
   URL.revokeObjectURL(url)
-  notify('备份文件已导出')
+  notify('账本和私人小工具已备份')
 }
 
 async function onImport(file) {
-  if (!window.confirm('恢复备份会替换当前全部数据，确定继续吗？')) return
+  if (!window.confirm('恢复备份会替换文件中包含的本地数据，确定继续吗？')) return
   try {
     const payload = JSON.parse(await file.text())
+    if (payload.privateTools) {
+      validatePeriods(payload.privateTools.periods)
+      if (payload.privateTools.vault) validateVaultEnvelope(payload.privateTools.vault)
+    }
     await importDatabase(payload)
+    if (payload.privateTools) {
+      await replacePeriods(payload.privateTools.periods)
+      await replaceVaultEnvelope(payload.privateTools.vault || null)
+    }
     await refresh()
-    notify('备份已恢复')
+    notify(payload.privateTools ? '完整备份已恢复' : '旧版账本备份已恢复，私人小工具未改动')
   } catch (error) {
     notify(error.message || '备份文件读取失败')
   }

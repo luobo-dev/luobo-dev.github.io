@@ -2,14 +2,13 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  PhArrowClockwise,
   PhCalendarBlank,
   PhCheckCircle,
   PhDownloadSimple,
   PhFileXls,
   PhFolders,
   PhInfo,
-  PhShareNetwork,
+  PhLockKey,
   PhShieldCheck,
   PhUploadSimple,
   PhWarningCircle,
@@ -29,8 +28,6 @@ const excelBusy = ref(false)
 const importing = ref(false)
 const excelError = ref('')
 const preview = ref(null)
-const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
 
 function chooseFile() {
   fileInput.value?.click()
@@ -103,7 +100,7 @@ async function downloadExcel() {
 
     <section class="privacy-panel">
       <PhShieldCheck :size="30" weight="duotone" />
-      <div><h2>只存在这台设备</h2><p>流水保存在浏览器的 IndexedDB 中，不会上传到服务器。</p></div>
+      <div><h2>只存在这台设备</h2><p>账本和私人小工具保存在浏览器的 IndexedDB 中，不会上传到服务器。</p></div>
     </section>
 
     <section class="settings-section">
@@ -124,21 +121,11 @@ async function downloadExcel() {
     </section>
 
     <section class="settings-section">
-      <div class="section-heading"><div><h2>完整备份</h2><p>包含一笔的全部本地数据</p></div></div>
+      <div class="section-heading"><div><h2>完整备份</h2><p>包含账本、经期记录和加密保险箱</p></div></div>
       <div class="settings-actions">
-        <button type="button" @click="emit('export')"><PhDownloadSimple :size="21" /><span><strong>导出 JSON 备份</strong><small>适合换设备或防止数据丢失</small></span></button>
-        <button type="button" @click="chooseFile"><PhUploadSimple :size="21" /><span><strong>恢复 JSON 备份</strong><small>会替换当前全部数据</small></span></button>
+        <button type="button" @click="emit('export')"><PhDownloadSimple :size="21" /><span><strong>导出完整备份</strong><small>保险箱内容在文件中仍保持加密</small></span></button>
+        <button type="button" @click="chooseFile"><PhUploadSimple :size="21" /><span><strong>恢复完整备份</strong><small>同时恢复账本和文件中包含的私人数据</small></span></button>
         <input ref="fileInput" hidden type="file" accept="application/json,.json" @change="onFile" />
-      </div>
-    </section>
-
-    <section v-if="!isStandalone" class="install-panel">
-      <PhShareNetwork v-if="isIos" :size="25" />
-      <PhArrowClockwise v-else :size="25" />
-      <div>
-        <h2>添加到手机桌面</h2>
-        <p v-if="isIos">在 Safari 中点击分享按钮，再选择“添加到主屏幕”。</p>
-        <p v-else>打开浏览器菜单，选择“安装应用”或“添加到主屏幕”。</p>
       </div>
     </section>
 
@@ -151,6 +138,7 @@ async function downloadExcel() {
       <div class="section-heading"><div><h2>私人小工具</h2><p>独立保存，不混入账本数据</p></div></div>
       <div class="settings-actions">
         <button type="button" @click="router.push({ name: 'period-tracker' })"><PhCalendarBlank :size="22" /><span><strong>经期记录</strong><small>记下开始、结束日期和周期规律</small></span></button>
+        <button type="button" @click="router.push({ name: 'private-vault' })"><PhLockKey :size="22" /><span><strong>私密保险箱</strong><small>加密保存银行卡号和私密账号</small></span></button>
       </div>
     </section>
 

@@ -14,6 +14,7 @@ const props = defineProps({
 const route = useRoute()
 const router = useRouter()
 const year = computed(() => Number(route.params.year) || new Date().getFullYear())
+const canMoveNext = computed(() => year.value < new Date().getFullYear())
 const yearTransactions = computed(() => props.transactions.filter((item) => item.date.startsWith(`${year.value}-`)))
 const totals = computed(() => transactionTotals(yearTransactions.value))
 const now = new Date()
@@ -48,6 +49,7 @@ const yearlyOption = computed(() => ({
 }))
 
 function moveYear(amount) {
+  if (amount > 0 && !canMoveNext.value) return
   router.replace({ name: 'annual-report', params: { year: year.value + amount } })
 }
 
@@ -74,7 +76,7 @@ function changeText() {
     <div class="period-nav annual-year-nav">
       <button type="button" aria-label="上一年" @click="moveYear(-1)"><PhCaretLeft :size="18" /></button>
       <strong>{{ year }} 年</strong>
-      <button type="button" aria-label="下一年" @click="moveYear(1)"><PhCaretRight :size="18" /></button>
+      <button type="button" aria-label="下一年" :disabled="!canMoveNext" @click="moveYear(1)"><PhCaretRight :size="18" /></button>
     </div>
 
     <template v-if="yearTransactions.length">

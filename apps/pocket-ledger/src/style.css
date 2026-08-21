@@ -276,8 +276,7 @@ button:disabled {
 
 .section-heading h2,
 .chart-heading h2,
-.privacy-panel h2,
-.install-panel h2 {
+.privacy-panel h2 {
   margin: 0;
   font-size: 19px;
   letter-spacing: -0.025em;
@@ -285,7 +284,6 @@ button:disabled {
 
 .section-heading p,
 .privacy-panel p,
-.install-panel p,
 .about-panel p {
   margin: 4px 0 0;
   line-height: 1.5;
@@ -1055,6 +1053,12 @@ button:disabled {
   color: var(--income);
 }
 
+.comparison-grid small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 .annual-report-entry {
   display: flex;
   width: 100%;
@@ -1811,8 +1815,258 @@ button:disabled {
   line-height: 1.5;
 }
 
+.private-vault-view .records-header > .icon-button:last-child {
+  margin-left: auto;
+}
+
+.vault-auth-panel {
+  max-width: 460px;
+  margin: 28px auto 0;
+  padding: 24px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.vault-auth-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 18px;
+  place-items: center;
+  color: var(--accent);
+  border-radius: 50%;
+  background: var(--accent-soft);
+}
+
+.vault-auth-panel h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.vault-auth-panel > p {
+  margin: 8px 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.vault-auth-panel form {
+  display: grid;
+  gap: 14px;
+}
+
+.vault-warning {
+  display: grid;
+  gap: 3px;
+  margin-top: 16px;
+  padding: 12px 13px;
+  color: var(--expense);
+  border-radius: var(--radius-control);
+  background: var(--expense-soft);
+  font-size: 12px;
+}
+
+.vault-warning span {
+  color: var(--muted-strong);
+  line-height: 1.45;
+}
+
+.vault-import-link {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 0;
+  color: var(--accent);
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vault-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px;
+  color: var(--accent-contrast);
+  border-radius: var(--radius-card);
+  background: var(--accent);
+}
+
+.vault-summary > div {
+  display: grid;
+  gap: 6px;
+}
+
+.vault-summary span,
+.vault-summary small {
+  color: color-mix(in srgb, var(--accent-contrast) 72%, transparent);
+  font-size: 11px;
+}
+
+.vault-summary strong {
+  font-size: 20px;
+}
+
+.vault-create-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.vault-create-actions button {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vault-copy-status {
+  margin: -6px 0 10px;
+  text-align: center;
+  color: var(--income);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vault-list {
+  display: grid;
+  gap: 10px;
+}
+
+.vault-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 75px;
+  align-items: center;
+  gap: 11px;
+  min-height: 104px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.vault-item-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  color: var(--accent);
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+}
+
+.vault-item-content {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.vault-item-content > span,
+.vault-item-content > small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-item-content > strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-item-content code {
+  overflow: hidden;
+  color: var(--muted-strong);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-item-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 34px);
+  gap: 7px;
+}
+
+.vault-item-actions button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  color: var(--muted-strong);
+  border: 0;
+  border-radius: 9px;
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.vault-empty {
+  padding-top: 42px;
+  padding-bottom: 42px;
+}
+
+.vault-backup-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.vault-backup-actions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--muted-strong);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.vault-field-warning {
+  margin: -2px 0 0;
+  color: var(--expense);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.vault-editor-sheet {
+  max-width: 520px;
+}
+
 @media (max-width: 380px) {
   .period-primary-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .vault-create-actions,
+  .vault-backup-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -1896,7 +2150,6 @@ button:disabled {
 }
 
 .privacy-panel,
-.install-panel,
 .about-panel {
   display: flex;
   align-items: flex-start;
@@ -2058,18 +2311,6 @@ button:disabled {
 
 .import-confirm {
   margin-top: 20px;
-}
-
-.install-panel {
-  margin-top: 14px;
-  color: var(--accent);
-  border: 1px solid var(--line);
-  background: var(--accent-soft);
-}
-
-.install-panel p {
-  color: var(--muted-strong);
-  font-size: 13px;
 }
 
 .about-panel {

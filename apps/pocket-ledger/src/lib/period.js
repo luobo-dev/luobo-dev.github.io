@@ -33,3 +33,10 @@ export function periodSummary(records) {
     cyclesNeeded: Math.max(0, 3 - ordered.length),
   }
 }
+
+export function validatePeriods(items) {
+  if (!Array.isArray(items) || items.some((item) => !item?.id || !item?.startDate || (item.endDate && item.endDate < item.startDate))) {
+    throw new Error('私人小工具中的经期记录格式无效')
+  }
+  return true
+}

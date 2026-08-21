@@ -1,4 +1,5 @@
 import { openDB } from 'idb'
+import { validatePeriods } from './period.js'
 
 const dbPromise = openDB('personal-period-tracker', 1, {
   upgrade(db) {
@@ -44,4 +45,13 @@ export async function savePeriod(input) {
 export async function removePeriod(id) {
   const db = await dbPromise
   await db.delete('periods', id)
+}
+
+export async function replacePeriods(items) {
+  validatePeriods(items)
+  const db = await dbPromise
+  const tx = db.transaction('periods', 'readwrite')
+  await tx.store.clear()
+  await Promise.all(items.map((item) => tx.store.put(item)))
+  await tx.done
 }

@@ -40,6 +40,11 @@ const router = createRouter({
       component: () => import('./views/PeriodTrackerView.vue'),
     },
     {
+      path: '/private-vault',
+      name: 'private-vault',
+      component: () => import('./views/PrivateVaultView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/',
     },

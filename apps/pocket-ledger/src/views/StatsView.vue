@@ -16,6 +16,10 @@ const anchor = ref(new Date())
 const router = useRouter()
 
 const range = computed(() => getPeriodRange(period.value, anchor.value))
+const canMoveNext = computed(() => {
+  const next = shiftPeriod(period.value, anchor.value, 1)
+  return getPeriodRange(period.value, next).start <= getPeriodRange(period.value, new Date()).start
+})
 const scoped = computed(() => props.transactions.filter((item) => item.date >= range.value.start && item.date <= range.value.end))
 const income = computed(() => scoped.value.filter((item) => item.type === 'income').reduce((sum, item) => sum + item.amount, 0))
 const expense = computed(() => scoped.value.filter((item) => item.type === 'expense').reduce((sum, item) => sum + item.amount, 0))
@@ -28,12 +32,20 @@ function expenseInRange(targetRange) {
 
 const monthComparisons = computed(() => {
   if (period.value !== 'month') return null
-  const current = expenseInRange(comparableMonthRange(anchor.value))
-  const previous = expenseInRange(comparableMonthRange(anchor.value, -1))
-  const lastYear = expenseInRange(comparableMonthRange(anchor.value, -12))
+  const currentRange = comparableMonthRange(anchor.value)
+  const previousRange = comparableMonthRange(anchor.value, -1)
+  const lastYearRange = comparableMonthRange(anchor.value, -12)
+  const current = expenseInRange(currentRange)
+  const previous = expenseInRange(previousRange)
+  const lastYear = expenseInRange(lastYearRange)
+  const now = new Date()
   return {
     month: percentageChange(current, previous),
     year: percentageChange(current, lastYear),
+    currentRange,
+    previousRange,
+    lastYearRange,
+    partial: anchor.value.getFullYear() === now.getFullYear() && anchor.value.getMonth() === now.getMonth(),
   }
 })
 
@@ -201,12 +213,20 @@ function formatComparison(value) {
   return { text: `${value > 0 ? '增加' : '减少'} ${Math.abs(value).toFixed(1)}%`, tone: value > 0 ? 'up' : 'down' }
 }
 
+function formatComparisonRange(targetRange, includeYear = false) {
+  const start = new Date(`${targetRange.start}T00:00:00`)
+  const end = new Date(`${targetRange.end}T00:00:00`)
+  const prefix = includeYear ? `${start.getFullYear()}年` : ''
+  return `${prefix}${start.getMonth() + 1}月${start.getDate()}日～${end.getMonth() + 1}月${end.getDate()}日`
+}
+
 function changePeriod(next) {
   period.value = next
   anchor.value = new Date()
 }
 
 function move(amount) {
+  if (amount > 0 && !canMoveNext.value) return
   anchor.value = shiftPeriod(period.value, anchor.value, amount)
 }
 </script>
@@ -227,7 +247,7 @@ function move(amount) {
     <div class="period-nav">
       <button type="button" aria-label="上一个周期" @click="move(-1)"><PhCaretLeft :size="18" /></button>
       <strong>{{ periodTitle(period, anchor) }}</strong>
-      <button type="button" aria-label="下一个周期" @click="move(1)"><PhCaretRight :size="18" /></button>
+      <button type="button" aria-label="下一个周期" :disabled="!canMoveNext" @click="move(1)"><PhCaretRight :size="18" /></button>
     </div>
 
     <section class="stats-summary">
@@ -237,8 +257,16 @@ function move(amount) {
     </section>
 
     <section v-if="monthComparisons" class="comparison-grid" aria-label="支出对比">
-      <div><span>相比上月</span><strong :class="formatComparison(monthComparisons.month).tone">{{ formatComparison(monthComparisons.month).text }}</strong></div>
-      <div><span>相比去年同月</span><strong :class="formatComparison(monthComparisons.year).tone">{{ formatComparison(monthComparisons.year).text }}</strong></div>
+      <div>
+        <span>{{ monthComparisons.partial ? '相比上月同期' : '相比上月' }}</span>
+        <strong :class="formatComparison(monthComparisons.month).tone">{{ formatComparison(monthComparisons.month).text }}</strong>
+        <small>{{ formatComparisonRange(monthComparisons.currentRange) }} 对比 {{ formatComparisonRange(monthComparisons.previousRange) }}</small>
+      </div>
+      <div>
+        <span>{{ monthComparisons.partial ? '相比去年同期' : '相比去年同月' }}</span>
+        <strong :class="formatComparison(monthComparisons.year).tone">{{ formatComparison(monthComparisons.year).text }}</strong>
+        <small>{{ formatComparisonRange(monthComparisons.currentRange, true) }} 对比 {{ formatComparisonRange(monthComparisons.lastYearRange, true) }}</small>
+      </div>
     </section>
 
     <button class="annual-report-entry" type="button" @click="router.push({ name: 'annual-report', params: { year: anchor.getFullYear() } })">
